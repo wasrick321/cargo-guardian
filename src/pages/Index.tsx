@@ -67,7 +67,7 @@ function extractAnalysisText(responseData: any): any {
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
-  const [error, setError] = useState<ErrorState | null>(null);
+  const [error, setError] = useState<ErrorState & { fullResponse?: any } | null>(null);
   const [lastFormData, setLastFormData] = useState<ShipmentFormData | null>(null);
 
   const handleSubmit = async (data: ShipmentFormData) => {
@@ -185,9 +185,24 @@ const Index = () => {
       console.error("Fetch/Processing error:", err);
       const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
       const statusMatch = errorMessage.match(/status (\d+)/);
+      
+      let fullResponse = null;
+      try {
+        // Try to extract response body if available
+        if (err instanceof Error && err.message.includes("Server responded with status")) {
+          const bodyMatch = err.message.match(/: (.+)$/);
+          if (bodyMatch) {
+            fullResponse = bodyMatch[1];
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+      
       setError({
         message: errorMessage,
         statusCode: statusMatch ? parseInt(statusMatch[1], 10) : undefined,
+        fullResponse,
       });
     } finally {
       setIsLoading(false);
@@ -235,7 +250,7 @@ const Index = () => {
 
           {/* Results or Error */}
           {result && <ResultsPanel result={result} onReset={handleReset} />}
-          {error && <ErrorPanel error={error.message} statusCode={error.statusCode} onRetry={handleRetry} />}
+          {error && <ErrorPanel error={error.message} statusCode={error.statusCode} onRetry={handleRetry} debug={error.fullResponse} />}
         </div>
       </main>
 
