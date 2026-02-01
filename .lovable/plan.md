@@ -1,56 +1,68 @@
 
+# Form Simplification and Response Handling Update
 
-# Spoilage Risk Assessment App
+This plan addresses your request to simplify the shipment form and ensure the app waits for the actual analysis response from n8n.
 
-A single-page web application to submit shipment data and receive AI-powered spoilage risk analysis from your n8n workflow.
+## Summary of Changes
 
-## Page Layout
+### Form Field Changes
 
-### Header Section
-- App title: "Crop Spoilage Risk Assessment"
-- Brief description explaining the purpose of the tool
+**Add:**
+- Truck City (new text field for the truck's origin city)
 
-### Shipment Data Form
-A clean, organized form with the following fields grouped logically:
+**Modify:**
+- Crops Loaded: Change from dropdown to free-text input so you can type multiple crops (comma-separated or however you prefer)
 
-**Vehicle & Cargo**
-- Truck ID (text, required)
-- Crops Loaded (dropdown: Apple, Tomato, Potato - required)
+**Remove:**
+- Warehouse Temperature
+- Warehouse Humidity
+- Expected Duration (Days)
+- Refrigerated option from Transport Type (keeping only "Unrefrigerated/Ambient")
+- WhatsApp Number
+- Additional Notes
 
-**Warehouse Details**
-- Warehouse City (text, required)
-- Warehouse Temperature in °C (number, optional)
-- Warehouse Humidity in % (number, optional)
+### Simplified Form Structure
 
-**Transport Information**
-- Transport Type (dropdown: Unrefrigerated/Refrigerated - required)
-- Expected Transport Duration in Days (number, optional)
+After changes, the form will have:
 
-**Alert Contacts**
-- Alert Email Address (email, required)
-- WhatsApp Number for Alerts (text, optional)
+1. **Vehicle & Cargo**
+   - Truck ID (required)
+   - Truck City (required) - NEW
+   - Crops Loaded (required) - now a text input
 
-**Additional Information**
-- Additional Notes (textarea, optional)
+2. **Warehouse Details**
+   - Warehouse City (required)
 
-**Form Behavior:**
-- All required fields validated before submission
-- Submit button shows loading spinner during request
-- Button disabled while request is in-flight
+3. **Transport Information**
+   - Transport Type (required) - only "Unrefrigerated (Ambient)" option
 
-### Results Panel
-- Appears below the form after successful submission
-- Displays the analysis text from n8n in a clean, readable card
-- "Run Again" button to reset and start fresh
+4. **Alert Contacts**
+   - Alert Email Address (required)
 
-### Error Handling
-- Friendly error message panel if request fails
-- Shows status information and retry button
-- "No data returned" message for empty responses
+### Response Handling
 
-## Design Approach
-- Clean, minimal interface using existing shadcn/ui components
-- Responsive layout that works on both desktop and mobile
-- Professional color scheme suitable for logistics/agriculture context
-- Clear visual hierarchy with proper spacing and grouping
+The current code already waits for the webhook response. Looking at your network logs, the webhook returns `{"message":"Workflow was started"}` which means your n8n workflow is using the default response mode.
 
+To get actual analysis results, you need to configure your n8n workflow to use the "Respond to Webhook" node at the end, which will return the actual analysis text. The frontend code is already set up to display whatever JSON response comes back.
+
+---
+
+## Technical Details
+
+### Files to Modify
+
+**src/components/ShipmentForm.tsx**
+- Update Zod schema: remove fields for temperature, humidity, duration, whatsapp, notes; add truck_city
+- Change crops field validation to accept free text instead of requiring specific values
+- Update default values to match new schema
+- Remove warehouse temperature and humidity form fields
+- Remove transport duration field
+- Remove refrigerated option from transport type dropdown
+- Remove whatsapp and notes form fields
+- Add new Truck City text input field
+- Change Crops from Select to Input component
+
+**src/pages/Index.tsx**
+- Update payload building to remove deleted fields
+- Add truck_city to the payload
+- Remove type conversions for temperature/humidity/duration since those fields are gone
