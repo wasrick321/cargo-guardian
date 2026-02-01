@@ -119,7 +119,7 @@ export function ShipmentForm({ onSubmit, isLoading }: ShipmentFormProps) {
                   <FormItem>
                     <FormLabel>Warehouse City *</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Mumbai" {...field} />
+                      <Input placeholder="e.g., Delhi" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
