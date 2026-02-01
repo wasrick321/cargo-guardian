@@ -4,7 +4,6 @@ import { z } from "zod";
 import { Loader2, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormControl,
@@ -13,26 +12,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const formSchema = z.object({
   truck_id: z.string().min(1, "Truck ID is required").max(50, "Truck ID must be less than 50 characters"),
-  crops: z.string().min(1, "Please select a crop type"),
+  truck_city: z.string().min(1, "Truck city is required").max(100, "City name must be less than 100 characters"),
+  crops: z.string().min(1, "Please enter the crops loaded"),
   warehouse_city: z.string().min(1, "Warehouse city is required").max(100, "City name must be less than 100 characters"),
-  warehouse_temperature: z.string().optional(),
-  warehouse_humidity: z.string().optional(),
-  transport_type: z.string().min(1, "Please select transport type"),
-  transport_duration_days: z.string().optional(),
+  transport_type: z.literal("ambient"),
   email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
-  whatsapp_number: z.string().optional(),
-  notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
 });
 
 export type ShipmentFormData = z.infer<typeof formSchema>;
@@ -47,15 +35,11 @@ export function ShipmentForm({ onSubmit, isLoading }: ShipmentFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       truck_id: "",
+      truck_city: "",
       crops: "",
       warehouse_city: "",
-      warehouse_temperature: "",
-      warehouse_humidity: "",
-      transport_type: "",
-      transport_duration_days: "",
+      transport_type: "ambient",
       email: "",
-      whatsapp_number: "",
-      notes: "",
     },
   });
 
@@ -98,27 +82,31 @@ export function ShipmentForm({ onSubmit, isLoading }: ShipmentFormProps) {
                 />
                 <FormField
                   control={form.control}
-                  name="crops"
+                  name="truck_city"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Crops Loaded *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select crop type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="apple">Apple</SelectItem>
-                          <SelectItem value="tomato">Tomato</SelectItem>
-                          <SelectItem value="potato">Potato</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Truck City *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Delhi" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+              <FormField
+                control={form.control}
+                name="crops"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Crops Loaded *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Apple, Tomato, Potato" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Warehouse Details Section */}
@@ -126,47 +114,19 @@ export function ShipmentForm({ onSubmit, isLoading }: ShipmentFormProps) {
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                 Warehouse Details
               </h3>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <FormField
-                  control={form.control}
-                  name="warehouse_city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Warehouse City *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Mumbai" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="warehouse_temperature"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Temperature (°C)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.1" placeholder="e.g., 24.7" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="warehouse_humidity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Humidity (%)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="1" placeholder="e.g., 78" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="warehouse_city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Warehouse City *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Mumbai" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Transport Information Section */}
@@ -174,42 +134,19 @@ export function ShipmentForm({ onSubmit, isLoading }: ShipmentFormProps) {
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                 Transport Information
               </h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="transport_type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Transport Type *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select transport type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="ambient">Unrefrigerated (Ambient)</SelectItem>
-                          <SelectItem value="refrigerated">Refrigerated</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="transport_duration_days"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Expected Duration (Days)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.5" placeholder="e.g., 1.5" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="transport_type"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Transport Type *</FormLabel>
+                    <FormControl>
+                      <Input value="Unrefrigerated (Ambient)" disabled className="bg-muted" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Alert Contacts Section */}
@@ -217,53 +154,14 @@ export function ShipmentForm({ onSubmit, isLoading }: ShipmentFormProps) {
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                 Alert Contacts
               </h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Alert Email Address *</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="manager@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="whatsapp_number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>WhatsApp Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="+91XXXXXXXXXX" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Additional Notes Section */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Additional Information
-              </h3>
               <FormField
                 control={form.control}
-                name="notes"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Additional Notes</FormLabel>
+                    <FormLabel>Alert Email Address *</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Any special handling or observations"
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Input type="email" placeholder="manager@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
