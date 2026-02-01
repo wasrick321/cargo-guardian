@@ -1,68 +1,64 @@
 
-# Form Simplification and Response Handling Update
+# Fix Webhook Response Parsing
 
-This plan addresses your request to simplify the shipment form and ensure the app waits for the actual analysis response from n8n.
+The frontend expects a simple `{"text": "..."}` response, but your n8n webhook is returning a nested Gemini AI response structure. This plan will update the frontend to intelligently extract the analysis text from multiple possible response formats.
 
-## Summary of Changes
+## The Problem
 
-### Form Field Changes
+Your n8n webhook returns data in this nested format:
+```json
+{
+  "content": {
+    "parts": [{ "text": "..." }],
+    "role": "model"
+  },
+  "finishReason": "STOP",
+  "index": 0
+}
+```
 
-**Add:**
-- Truck City (new text field for the truck's origin city)
+But the frontend code looks for `result.text` at the root level, which doesn't exist in this structure.
 
-**Modify:**
-- Crops Loaded: Change from dropdown to free-text input so you can type multiple crops (comma-separated or however you prefer)
+## The Solution
 
-**Remove:**
-- Warehouse Temperature
-- Warehouse Humidity
-- Expected Duration (Days)
-- Refrigerated option from Transport Type (keeping only "Unrefrigerated/Ambient")
-- WhatsApp Number
-- Additional Notes
+Update the response parsing logic to handle multiple formats:
+1. Direct `text` property (original expected format)
+2. Nested Gemini format at `content.parts[0].text`
+3. Any other common variations
 
-### Simplified Form Structure
+## Changes
 
-After changes, the form will have:
+### File: src/pages/Index.tsx
 
-1. **Vehicle & Cargo**
-   - Truck ID (required)
-   - Truck City (required) - NEW
-   - Crops Loaded (required) - now a text input
+Update the response handling to extract text from the nested structure:
 
-2. **Warehouse Details**
-   - Warehouse City (required)
+```text
+After receiving responseData from fetch:
+1. Check if responseData.text exists (simple format)
+2. If not, check if responseData.content?.parts?.[0]?.text exists (Gemini format)  
+3. Parse the extracted text and set it as the result
+```
 
-3. **Transport Information**
-   - Transport Type (required) - only "Unrefrigerated (Ambient)" option
+### File: src/components/ResultsPanel.tsx
 
-4. **Alert Contacts**
-   - Alert Email Address (required)
-
-### Response Handling
-
-The current code already waits for the webhook response. Looking at your network logs, the webhook returns `{"message":"Workflow was started"}` which means your n8n workflow is using the default response mode.
-
-To get actual analysis results, you need to configure your n8n workflow to use the "Respond to Webhook" node at the end, which will return the actual analysis text. The frontend code is already set up to display whatever JSON response comes back.
-
----
+Enhance the results display to:
+1. Handle the analysis JSON structure beautifully
+2. Parse the stringified JSON analysis into readable sections
+3. Display risk levels with color-coded badges
+4. Show crop-specific analysis in organized cards
 
 ## Technical Details
 
-### Files to Modify
+**src/pages/Index.tsx changes:**
+- Add a `extractAnalysisText()` helper function that checks multiple response paths
+- Handle both direct text and nested Gemini response formats
+- Parse the inner JSON string to extract structured analysis data
 
-**src/components/ShipmentForm.tsx**
-- Update Zod schema: remove fields for temperature, humidity, duration, whatsapp, notes; add truck_city
-- Change crops field validation to accept free text instead of requiring specific values
-- Update default values to match new schema
-- Remove warehouse temperature and humidity form fields
-- Remove transport duration field
-- Remove refrigerated option from transport type dropdown
-- Remove whatsapp and notes form fields
-- Add new Truck City text input field
-- Change Crops from Select to Input component
-
-**src/pages/Index.tsx**
-- Update payload building to remove deleted fields
-- Add truck_city to the payload
-- Remove type conversions for temperature/humidity/duration since those fields are gone
+**src/components/ResultsPanel.tsx changes:**
+- Update the interface to accept parsed analysis data
+- Add structured display for:
+  - Analysis context (origin, destination, weather, temperature)
+  - Individual crop risk cards with risk levels
+  - Overall recommendations section
+- Add color-coded risk level badges (HIGH=red, MEDIUM=yellow, LOW=green)
+- Fallback to plain text display if parsing fails
