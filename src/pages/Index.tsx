@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Leaf } from "lucide-react";
 import { ShipmentForm, type ShipmentFormData } from "@/components/ShipmentForm";
 import { ResultsPanel } from "@/components/ResultsPanel";
@@ -91,6 +91,44 @@ const Index = () => {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<ErrorState & { fullResponse?: any } | null>(null);
   const [lastFormData, setLastFormData] = useState<ShipmentFormData | null>(null);
+  const [consoleLines, setConsoleLines] = useState<string[]>([]);
+
+  useEffect(() => {
+    const origLog = console.log.bind(console);
+    const origError = console.error.bind(console);
+
+    function formatArgs(args: any[]) {
+      return args
+        .map((a) => {
+          if (typeof a === "string") return a;
+          try {
+            return JSON.stringify(a, null, 2);
+          } catch {
+            return String(a);
+          }
+        })
+        .join(" ");
+    }
+
+    console.log = (...args: any[]) => {
+      try {
+        setConsoleLines((prev) => [...prev, `LOG: ${formatArgs(args)}`].slice(-500));
+      } catch {}
+      origLog(...args);
+    };
+
+    console.error = (...args: any[]) => {
+      try {
+        setConsoleLines((prev) => [...prev, `ERR: ${formatArgs(args)}`].slice(-500));
+      } catch {}
+      origError(...args);
+    };
+
+    return () => {
+      console.log = origLog;
+      console.error = origError;
+    };
+  }, []);
 
   const handleSubmit = async (data: ShipmentFormData) => {
     setIsLoading(true);
@@ -238,6 +276,14 @@ const Index = () => {
           {/* Results or Error */}
           {result && <ResultsPanel result={result} onReset={handleReset} />}
           {error && <ErrorPanel error={error.message} statusCode={error.statusCode} onRetry={handleRetry} debug={error.fullResponse} />}
+
+          {/* Console Output Box (for debugging) */}
+          <div className="mt-6">
+            <h3 className="text-sm font-semibold mb-2">Console Output</h3>
+            <div className="bg-black text-white p-3 rounded max-h-64 overflow-auto border">
+              <pre className="whitespace-pre-wrap text-xs font-mono">{consoleLines.join('\n')}</pre>
+            </div>
+          </div>
         </div>
       </main>
 
