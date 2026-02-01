@@ -6,13 +6,35 @@ import { ErrorPanel } from "@/components/ErrorPanel";
 
 const WEBHOOK_URL = "https://rickyy.app.n8n.cloud/webhook-test/spoilage-risk-v2";
 
-interface AnalysisResult {
-  text?: string;
-}
-
 interface ErrorState {
   message: string;
   statusCode?: number;
+}
+
+// Helper function to extract analysis from multiple response formats
+function extractAnalysisText(responseData: any): any {
+  // Case 1: Simple format { text: "..." }
+  if (responseData?.text) {
+    return responseData.text;
+  }
+
+  // Case 2: Gemini nested format
+  if (responseData?.content?.parts?.[0]?.text) {
+    return responseData.content.parts[0].text;
+  }
+
+  // Case 3: Wrapped inside { status, data }
+  if (responseData?.data?.text) {
+    return responseData.data.text;
+  }
+
+  // Case 4: Already structured JSON (best case)
+  if (responseData?.data?.crops_analysis || responseData?.crops_analysis) {
+    return responseData.data ?? responseData;
+  }
+
+  // Fallback
+  return null;
 }
 
 const Index = () => {
@@ -38,9 +60,7 @@ const Index = () => {
     try {
       const response = await fetch(WEBHOOK_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
@@ -49,7 +69,25 @@ const Index = () => {
       }
 
       const responseData = await response.json();
-      setResult(responseData);
+      const extracted = extractAnalysisText(responseData);
+
+      if (!extracted) {
+        throw new Error("Unable to extract analysis from response");
+      }
+
+      // If extracted is a STRING, try parsing JSON inside it
+      let parsedResult;
+      if (typeof extracted === "string") {
+        try {
+          parsedResult = JSON.parse(extracted);
+        } catch {
+          parsedResult = extracted; // fallback to plain text
+        }
+      } else {
+        parsedResult = extracted; // already an object
+      }
+
+      setResult(parsedResult);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
       const statusMatch = errorMessage.match(/status (\d+)/);
