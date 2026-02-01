@@ -140,69 +140,31 @@ const Index = () => {
       
       console.log("Parsed response from webhook:", JSON.stringify(responseData, null, 2));
       
-      const extracted = extractAnalysisText(responseData);
-      console.log("Extracted data:", extracted);
-
-      if (!extracted) {
-        console.error("Failed to extract analysis. Full response:", responseData);
-        throw new Error(
-          `Unable to extract analysis from response. Response structure: ${JSON.stringify(responseData).substring(0, 200)}...`
-        );
+      // DIRECT SIMPLE ACCESS - no extraction function
+      let result: any = responseData;
+      
+      // If it's an array, get first element
+      if (Array.isArray(result)) {
+        console.log("Is array, taking first element");
+        result = result[0];
       }
-
-      // If extracted is a STRING, try parsing JSON inside it
-      let parsedResult;
-      if (typeof extracted === "string") {
-        try {
-          parsedResult = JSON.parse(extracted);
-        } catch (parseErr) {
-          console.error("Failed to parse JSON string:", parseErr);
-          parsedResult = extracted; // fallback to plain text
-        }
-      } else {
-        parsedResult = extracted; // already an object
+      
+      console.log("After array unwrap:", JSON.stringify(result, null, 2));
+      
+      // If it has output.crops_analysis, move it to root
+      if (result?.output?.crops_analysis) {
+        console.log("Found output.crops_analysis, extracting...");
+        result = result.output;
       }
-
-      // Normalize the response structure for consistent display
-      if (parsedResult && typeof parsedResult === "object") {
-        // Handle multiple response formats
-        let crops: any[] = [];
-        
-        // Format 1: crop_spoilage_risk_assessments with crop_name
-        if (parsedResult.crop_spoilage_risk_assessments) {
-          crops = parsedResult.crop_spoilage_risk_assessments.map((crop: any) => ({
-            crop_name: crop.crop_name,
-            risk_level: crop.risk_level,
-            estimated_days_before_spoilage: crop.days_before_spoilage_estimate,
-            preventive_actions: crop.specific_preventive_actions?.storage || [],
-            transport_risk_score: crop.transport_risk_score,
-            storage_risk_score: crop.storage_risk_score,
-            reasoning: crop.clear_reasoning_for_assessment,
-          }));
-        }
-        // Format 2: crop_specific_spoilage_risk_assessment with name field
-        else if (parsedResult.crop_specific_spoilage_risk_assessment) {
-          crops = parsedResult.crop_specific_spoilage_risk_assessment.map((crop: any) => ({
-            crop_name: crop.name || crop.crop_name,
-            risk_level: crop.risk_level,
-            estimated_days_before_spoilage: crop.days_before_spoilage_estimate,
-            preventive_actions: crop.specific_preventive_actions?.storage || [],
-            transport_risk_score: crop.transport_risk_score,
-            storage_risk_score: crop.storage_risk_score,
-            reasoning: crop.clear_reasoning,
-          }));
-        }
-        // Format 3: crops_analysis (already in correct format)
-        else if (parsedResult.crops_analysis) {
-          crops = parsedResult.crops_analysis;
-        }
-
-        if (crops.length > 0) {
-          parsedResult.crops_analysis = crops;
-        }
+      
+      // Verify we have crops_analysis
+      if (!result?.crops_analysis || !Array.isArray(result.crops_analysis)) {
+        console.error("✗ Still no crops_analysis! Result:", result);
+        throw new Error("No crops_analysis array found");
       }
-
-      setResult(parsedResult);
+      
+      console.log("✓ SUCCESS! Crops found:", result.crops_analysis.length);
+      setResult(result);
     } catch (err) {
       console.error("Fetch/Processing error:", err);
       const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
