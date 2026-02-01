@@ -26,7 +26,12 @@ function RiskBadge({ level }: { level: string }) {
 }
 
 export function ResultsPanel({ result, onReset }: ResultsPanelProps) {
-  if (!result) return null;
+  console.log("ResultsPanel received result:", JSON.stringify(result, null, 2));
+  
+  if (!result) {
+    console.log("No result, returning null");
+    return null;
+  }
 
   // Fallback: plain text
   if (typeof result === "string") {
@@ -44,6 +49,7 @@ export function ResultsPanel({ result, onReset }: ResultsPanelProps) {
   }
 
   const crops = result.crops_analysis ?? [];
+  console.log("Crops array length:", crops.length, "Crops:", crops);
 
   return (
     <div className="space-y-6">
