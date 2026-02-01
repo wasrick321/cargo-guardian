@@ -19,7 +19,6 @@ const formSchema = z.object({
   truck_city: z.string().min(1, "Truck city is required").max(100, "City name must be less than 100 characters"),
   crops: z.string().min(1, "Please enter the crops loaded"),
   warehouse_city: z.string().min(1, "Warehouse city is required").max(100, "City name must be less than 100 characters"),
-  transport_type: z.literal("ambient"),
   email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
 });
 
@@ -38,7 +37,6 @@ export function ShipmentForm({ onSubmit, isLoading }: ShipmentFormProps) {
       truck_city: "",
       crops: "",
       warehouse_city: "",
-      transport_type: "ambient",
       email: "",
     },
   });
@@ -129,25 +127,6 @@ export function ShipmentForm({ onSubmit, isLoading }: ShipmentFormProps) {
               />
             </div>
 
-            {/* Transport Information Section */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Transport Information
-              </h3>
-              <FormField
-                control={form.control}
-                name="transport_type"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>Transport Type *</FormLabel>
-                    <FormControl>
-                      <Input value="Unrefrigerated (Ambient)" disabled className="bg-muted" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
 
             {/* Alert Contacts Section */}
             <div className="space-y-4">

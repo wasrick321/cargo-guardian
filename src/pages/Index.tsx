@@ -32,7 +32,6 @@ const Index = () => {
       truck_city: data.truck_city,
       crops: data.crops,
       warehouse_city: data.warehouse_city,
-      transport_type: data.transport_type,
       email: data.email,
     };
 
@@ -76,16 +75,18 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/30">
       {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Leaf className="h-5 w-5" />
+      <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg">
+              <Leaf className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Crop Spoilage Risk Assessment</h1>
+              <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                Crop Spoilage Risk Assessment
+              </h1>
               <p className="text-sm text-muted-foreground">
                 AI-powered analysis to predict and prevent crop spoilage during transport
               </p>
@@ -95,8 +96,8 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="mx-auto max-w-2xl space-y-6">
+      <main className="container mx-auto px-4 py-10">
+        <div className="mx-auto max-w-2xl space-y-8">
           {/* Form */}
           <ShipmentForm onSubmit={handleSubmit} isLoading={isLoading} />
 
@@ -105,6 +106,13 @@ const Index = () => {
           {error && <ErrorPanel error={error.message} statusCode={error.statusCode} onRetry={handleRetry} />}
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t bg-card/50 mt-auto">
+        <div className="container mx-auto px-4 py-4 text-center text-sm text-muted-foreground">
+          Powered by AI • Protecting your harvest every mile
+        </div>
+      </footer>
     </div>
   );
 };
