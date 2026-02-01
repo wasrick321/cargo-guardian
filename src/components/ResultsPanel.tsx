@@ -36,15 +36,17 @@ export function ResultsPanel({ result, onReset }: ResultsPanelProps) {
   const crops = result.crops_analysis ?? [];
   console.log("Crops array length:", crops.length, "Crops:", crops);
 
-  // If no crops found, display entire result as formatted JSON
+  // Display everything if no crops
   if (crops.length === 0) {
     return (
       <div className="space-y-4">
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-yellow-900 mb-2">Raw Analysis Data:</h3>
-          <pre className="whitespace-pre-wrap bg-white p-4 rounded text-xs overflow-auto max-h-96 border border-yellow-100">
-            {JSON.stringify(result, null, 2)}
-          </pre>
+          <h3 className="text-sm font-semibold text-yellow-900 mb-2">📊 Result Received (No Crops Parsed):</h3>
+          <div className="bg-gray-900 rounded p-3 overflow-auto max-h-96 border border-gray-700">
+            <pre className="text-xs font-mono text-green-400 whitespace-pre-wrap break-words">
+              {JSON.stringify(result, null, 2)}
+            </pre>
+          </div>
         </div>
         <Button onClick={onReset} variant="outline" className="w-full">
           <RotateCcw className="mr-2 h-4 w-4" />

@@ -23,55 +23,66 @@ interface AnalysisResult {
 
 // Helper function to extract analysis from multiple response formats
 function extractAnalysisText(responseData: any): any {
-  console.log("Starting extraction with data type:", typeof responseData, "isArray:", Array.isArray(responseData));
+  console.log("=== EXTRACTION START ===");
+  console.log("Input type:", typeof responseData, "isArray:", Array.isArray(responseData));
+  console.log("Input data:", responseData);
   
   // Case 0: Array response - unwrap first element
   if (Array.isArray(responseData)) {
-    console.log("Response is array, unwrapping first element...");
+    console.log("→ Case 0: Is array, unwrapping...");
     if (responseData.length === 0) {
-      console.error("Array is empty");
+      console.log("→ Array is empty, returning null");
       return null;
     }
-    return extractAnalysisText(responseData[0]);
+    const unwrapped = responseData[0];
+    console.log("→ Unwrapped first element:", unwrapped);
+    return extractAnalysisText(unwrapped);
+  }
+
+  // Case 4: Wrapped in output { output: { crops_analysis: [...] } }
+  console.log("→ Checking for output.crops_analysis...");
+  console.log("  responseData exists?", !!responseData);
+  console.log("  responseData.output exists?", !!responseData?.output);
+  console.log("  responseData.output.crops_analysis exists?", !!responseData?.output?.crops_analysis);
+  
+  if (responseData?.output?.crops_analysis) {
+    console.log("→ Case 4: Found output.crops_analysis format!");
+    console.log("  Returning:", responseData.output);
+    return responseData.output;
   }
 
   // Case 1: Simple format { text: "..." }
   if (responseData?.text) {
-    console.log("Found simple text format");
+    console.log("→ Case 1: Found simple text format");
     return responseData.text;
   }
 
   // Case 2: Gemini nested format
   if (responseData?.content?.parts?.[0]?.text) {
-    console.log("Found Gemini nested format");
+    console.log("→ Case 2: Found Gemini nested format");
     return responseData.content.parts[0].text;
   }
 
   // Case 3: Wrapped inside { status, data }
   if (responseData?.data?.text) {
-    console.log("Found wrapped data.text format");
+    console.log("→ Case 3: Found wrapped data.text format");
     return responseData.data.text;
-  }
-
-  // Case 4: Wrapped in output { output: { crops_analysis: [...] } }
-  if (responseData && responseData.output && responseData.output.crops_analysis) {
-    console.log("Found output.crops_analysis format");
-    return responseData.output;
   }
 
   // Case 5: Already structured JSON (best case)
   if (responseData?.crops_analysis) {
-    console.log("Found structured crops_analysis format");
+    console.log("→ Case 5a: Found structured crops_analysis format");
     return responseData;
   }
 
   if (responseData?.data?.crops_analysis) {
-    console.log("Found data.crops_analysis format");
+    console.log("→ Case 5b: Found data.crops_analysis format");
     return responseData.data;
   }
 
-  console.error("Could not extract from any known format. Response keys:", Object.keys(responseData || {}), "Full response:", responseData);
-  // Fallback
+  console.error("✗ Could not extract from any known format");
+  console.error("  Response keys:", Object.keys(responseData || {}));
+  console.error("  Full response:", responseData);
   return null;
 }
 
