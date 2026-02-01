@@ -74,10 +74,16 @@ const Index = () => {
       }
 
       const responseData = await response.json();
+      console.log("Raw response from webhook:", JSON.stringify(responseData, null, 2));
+      
       const extracted = extractAnalysisText(responseData);
+      console.log("Extracted data:", extracted);
 
       if (!extracted) {
-        throw new Error("Unable to extract analysis from response");
+        console.error("Failed to extract analysis. Full response:", responseData);
+        throw new Error(
+          `Unable to extract analysis from response. Response structure: ${JSON.stringify(responseData).substring(0, 200)}...`
+        );
       }
 
       // If extracted is a STRING, try parsing JSON inside it
@@ -85,7 +91,8 @@ const Index = () => {
       if (typeof extracted === "string") {
         try {
           parsedResult = JSON.parse(extracted);
-        } catch {
+        } catch (parseErr) {
+          console.error("Failed to parse JSON string:", parseErr);
           parsedResult = extracted; // fallback to plain text
         }
       } else {
