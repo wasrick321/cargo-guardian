@@ -54,18 +54,23 @@ function extractAnalysisText(responseData: any): any {
   }
 
   // Case 4: Wrapped in output { output: { crops_analysis: [...] } }
-  if (responseData?.output?.crops_analysis) {
+  if (responseData && responseData.output && responseData.output.crops_analysis) {
     console.log("Found output.crops_analysis format");
     return responseData.output;
   }
 
   // Case 5: Already structured JSON (best case)
-  if (responseData?.data?.crops_analysis || responseData?.crops_analysis) {
+  if (responseData?.crops_analysis) {
     console.log("Found structured crops_analysis format");
-    return responseData.data ?? responseData;
+    return responseData;
   }
 
-  console.error("Could not extract from any known format. Response keys:", Object.keys(responseData || {}));
+  if (responseData?.data?.crops_analysis) {
+    console.log("Found data.crops_analysis format");
+    return responseData.data;
+  }
+
+  console.error("Could not extract from any known format. Response keys:", Object.keys(responseData || {}), "Full response:", responseData);
   // Fallback
   return null;
 }
