@@ -4,7 +4,7 @@ import { ShipmentForm, type ShipmentFormData } from "@/components/ShipmentForm";
 import { ResultsPanel } from "@/components/ResultsPanel";
 import { ErrorPanel } from "@/components/ErrorPanel";
 
-const WEBHOOK_URL = "https://rickyy.app.n8n.cloud/webhook-test/spoilage-risk-v2";
+const WEBHOOK_URL = "https://rickyy.app.n8n.cloud/webhook/spoilage-risk-v2";
 
 interface ErrorState {
   message: string;
