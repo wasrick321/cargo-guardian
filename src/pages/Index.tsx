@@ -13,6 +13,11 @@ interface ErrorState {
 
 // Helper function to extract analysis from multiple response formats
 function extractAnalysisText(responseData: any): any {
+  // Case 0: Array response - unwrap first element
+  if (Array.isArray(responseData)) {
+    return extractAnalysisText(responseData[0]);
+  }
+
   // Case 1: Simple format { text: "..." }
   if (responseData?.text) {
     return responseData.text;
