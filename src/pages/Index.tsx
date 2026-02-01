@@ -160,7 +160,10 @@ const Index = () => {
       // Verify we have crops_analysis
       if (!result?.crops_analysis || !Array.isArray(result.crops_analysis)) {
         console.error("✗ Still no crops_analysis! Result:", result);
-        throw new Error("No crops_analysis array found");
+        // Display the raw console response on the frontend for debugging per user request
+        setResult({ raw_console: responseText } as any);
+        // Stop further processing
+        return;
       }
       
       console.log("✓ SUCCESS! Crops found:", result.crops_analysis.length);
