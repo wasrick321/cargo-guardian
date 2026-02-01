@@ -11,6 +11,16 @@ interface ErrorState {
   statusCode?: number;
 }
 
+interface AnalysisResult {
+  crops_analysis?: Array<{
+    crop_name: string;
+    risk_level: string;
+    estimated_days_before_spoilage: number | string;
+    preventive_actions?: string[];
+  }>;
+  [key: string]: any;
+}
+
 // Helper function to extract analysis from multiple response formats
 function extractAnalysisText(responseData: any): any {
   console.log("Starting extraction with data type:", typeof responseData, "isArray:", Array.isArray(responseData));
@@ -75,18 +85,38 @@ const Index = () => {
     };
 
     try {
+      console.log("Sending payload to webhook:", JSON.stringify(payload, null, 2));
+      
       const response = await fetch(WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
+      console.log("Response status:", response.status, response.statusText);
+      console.log("Response headers:", {
+        contentType: response.headers.get("content-type"),
+        contentLength: response.headers.get("content-length"),
+      });
+
       if (!response.ok) {
-        throw new Error(`Server responded with status ${response.status}`);
+        const errorText = await response.text();
+        console.error("Error response body:", errorText);
+        throw new Error(`Server responded with status ${response.status}: ${errorText}`);
       }
 
-      const responseData = await response.json();
-      console.log("Raw response from webhook:", JSON.stringify(responseData, null, 2));
+      const responseText = await response.text();
+      console.log("Raw response text:", responseText);
+      
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (parseErr) {
+        console.error("Failed to parse response as JSON:", parseErr);
+        throw new Error(`Response is not valid JSON: ${responseText.substring(0, 500)}`);
+      }
+      
+      console.log("Parsed response from webhook:", JSON.stringify(responseData, null, 2));
       
       const extracted = extractAnalysisText(responseData);
       console.log("Extracted data:", extracted);
@@ -109,6 +139,45 @@ const Index = () => {
         }
       } else {
         parsedResult = extracted; // already an object
+      }
+
+      // Normalize the response structure for consistent display
+      if (parsedResult && typeof parsedResult === "object") {
+        // Handle multiple response formats
+        let crops: any[] = [];
+        
+        // Format 1: crop_spoilage_risk_assessments with crop_name
+        if (parsedResult.crop_spoilage_risk_assessments) {
+          crops = parsedResult.crop_spoilage_risk_assessments.map((crop: any) => ({
+            crop_name: crop.crop_name,
+            risk_level: crop.risk_level,
+            estimated_days_before_spoilage: crop.days_before_spoilage_estimate,
+            preventive_actions: crop.specific_preventive_actions?.storage || [],
+            transport_risk_score: crop.transport_risk_score,
+            storage_risk_score: crop.storage_risk_score,
+            reasoning: crop.clear_reasoning_for_assessment,
+          }));
+        }
+        // Format 2: crop_specific_spoilage_risk_assessment with name field
+        else if (parsedResult.crop_specific_spoilage_risk_assessment) {
+          crops = parsedResult.crop_specific_spoilage_risk_assessment.map((crop: any) => ({
+            crop_name: crop.name || crop.crop_name,
+            risk_level: crop.risk_level,
+            estimated_days_before_spoilage: crop.days_before_spoilage_estimate,
+            preventive_actions: crop.specific_preventive_actions?.storage || [],
+            transport_risk_score: crop.transport_risk_score,
+            storage_risk_score: crop.storage_risk_score,
+            reasoning: crop.clear_reasoning,
+          }));
+        }
+        // Format 3: crops_analysis (already in correct format)
+        else if (parsedResult.crops_analysis) {
+          crops = parsedResult.crops_analysis;
+        }
+
+        if (crops.length > 0) {
+          parsedResult.crops_analysis = crops;
+        }
       }
 
       setResult(parsedResult);

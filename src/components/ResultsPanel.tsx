@@ -46,33 +46,72 @@ export function ResultsPanel({ result, onReset }: ResultsPanelProps) {
   const crops = result.crops_analysis ?? [];
 
   return (
-    <div className="space-y-4">
-      {crops.map((crop: any, idx: number) => (
-        <div
-          key={idx}
-          className="border rounded-lg p-4 shadow-sm bg-white"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold">{crop.crop_name}</h3>
-            <RiskBadge level={crop.risk_level} />
-          </div>
-
-          <p className="text-sm text-gray-600 mb-2">
-            Estimated spoilage:{" "}
-            <strong>{crop.estimated_days_before_spoilage}</strong>
+    <div className="space-y-6">
+      {/* Summary Section */}
+      {result.overall_summary_and_general_recommendations?.summary_statement && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h2 className="text-lg font-semibold text-blue-900 mb-2">Summary</h2>
+          <p className="text-sm text-blue-800">
+            {result.overall_summary_and_general_recommendations.summary_statement}
           </p>
-
-          {crop.preventive_actions && (
-            <ul className="list-disc list-inside text-sm space-y-1">
-              {crop.preventive_actions.map(
-                (action: string, i: number) => (
-                  <li key={i}>{action}</li>
-                )
-              )}
-            </ul>
-          )}
         </div>
-      ))}
+      )}
+
+      {/* Crop Risk Cards */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold">Crop-by-Crop Risk Assessment</h2>
+        {crops.map((crop: any, idx: number) => (
+          <div
+            key={idx}
+            className="border rounded-lg p-4 shadow-sm bg-white hover:shadow-md transition"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold">{crop.crop_name}</h3>
+              <RiskBadge level={crop.risk_level} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
+              <div>
+                <span className="text-gray-600">Spoilage Days:</span>
+                <p className="font-semibold text-gray-900">
+                  {crop.estimated_days_before_spoilage}
+                </p>
+              </div>
+              {crop.transport_risk_score && (
+                <div>
+                  <span className="text-gray-600">Transport Risk:</span>
+                  <p className="font-semibold text-gray-900">
+                    {crop.transport_risk_score}/100
+                  </p>
+                </div>
+              )}
+              {crop.storage_risk_score && (
+                <div>
+                  <span className="text-gray-600">Storage Risk:</span>
+                  <p className="font-semibold text-gray-900">
+                    {crop.storage_risk_score}/100
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {crop.preventive_actions && crop.preventive_actions.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                  Preventive Actions
+                </h4>
+                <ul className="list-disc list-inside text-sm space-y-1 text-gray-700">
+                  {crop.preventive_actions.map(
+                    (action: string, i: number) => (
+                      <li key={i}>{action}</li>
+                    )
+                  )}
+                </ul>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
       
       <Button onClick={onReset} variant="outline" className="w-full">
         <RotateCcw className="mr-2 h-4 w-4" />
