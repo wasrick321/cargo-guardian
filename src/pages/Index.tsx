@@ -27,24 +27,14 @@ const Index = () => {
     setResult(null);
     setLastFormData(data);
 
-    // Build the payload, converting string numbers to actual numbers where applicable
     const payload = {
       truck_id: data.truck_id,
+      truck_city: data.truck_city,
       crops: data.crops,
       warehouse_city: data.warehouse_city,
-      warehouse_temperature: data.warehouse_temperature ? parseFloat(data.warehouse_temperature) : undefined,
-      warehouse_humidity: data.warehouse_humidity ? parseFloat(data.warehouse_humidity) : undefined,
       transport_type: data.transport_type,
-      transport_duration_days: data.transport_duration_days ? parseFloat(data.transport_duration_days) : undefined,
       email: data.email,
-      whatsapp_number: data.whatsapp_number || undefined,
-      notes: data.notes || undefined,
     };
-
-    // Remove undefined values
-    const cleanPayload = Object.fromEntries(
-      Object.entries(payload).filter(([, v]) => v !== undefined && v !== "")
-    );
 
     try {
       const response = await fetch(WEBHOOK_URL, {
@@ -52,7 +42,7 @@ const Index = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(cleanPayload),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
