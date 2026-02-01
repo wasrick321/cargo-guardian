@@ -276,14 +276,6 @@ const Index = () => {
           {/* Results or Error */}
           {result && <ResultsPanel result={result} onReset={handleReset} />}
           {error && <ErrorPanel error={error.message} statusCode={error.statusCode} onRetry={handleRetry} debug={error.fullResponse} />}
-
-          {/* Console Output Box (for debugging) */}
-          <div className="mt-6">
-            <h3 className="text-sm font-semibold mb-2">Console Output</h3>
-            <div className="bg-black text-white p-3 rounded max-h-64 overflow-auto border">
-              <pre className="whitespace-pre-wrap text-xs font-mono">{consoleLines.join('\n')}</pre>
-            </div>
-          </div>
         </div>
       </main>
 
