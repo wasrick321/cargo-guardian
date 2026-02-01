@@ -53,7 +53,13 @@ function extractAnalysisText(responseData: any): any {
     return responseData.data.text;
   }
 
-  // Case 4: Already structured JSON (best case)
+  // Case 4: Wrapped in output { output: { crops_analysis: [...] } }
+  if (responseData?.output?.crops_analysis) {
+    console.log("Found output.crops_analysis format");
+    return responseData.output;
+  }
+
+  // Case 5: Already structured JSON (best case)
   if (responseData?.data?.crops_analysis || responseData?.crops_analysis) {
     console.log("Found structured crops_analysis format");
     return responseData.data ?? responseData;
