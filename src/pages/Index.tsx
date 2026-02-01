@@ -13,31 +13,43 @@ interface ErrorState {
 
 // Helper function to extract analysis from multiple response formats
 function extractAnalysisText(responseData: any): any {
+  console.log("Starting extraction with data type:", typeof responseData, "isArray:", Array.isArray(responseData));
+  
   // Case 0: Array response - unwrap first element
   if (Array.isArray(responseData)) {
+    console.log("Response is array, unwrapping first element...");
+    if (responseData.length === 0) {
+      console.error("Array is empty");
+      return null;
+    }
     return extractAnalysisText(responseData[0]);
   }
 
   // Case 1: Simple format { text: "..." }
   if (responseData?.text) {
+    console.log("Found simple text format");
     return responseData.text;
   }
 
   // Case 2: Gemini nested format
   if (responseData?.content?.parts?.[0]?.text) {
+    console.log("Found Gemini nested format");
     return responseData.content.parts[0].text;
   }
 
   // Case 3: Wrapped inside { status, data }
   if (responseData?.data?.text) {
+    console.log("Found wrapped data.text format");
     return responseData.data.text;
   }
 
   // Case 4: Already structured JSON (best case)
   if (responseData?.data?.crops_analysis || responseData?.crops_analysis) {
+    console.log("Found structured crops_analysis format");
     return responseData.data ?? responseData;
   }
 
+  console.error("Could not extract from any known format. Response keys:", Object.keys(responseData || {}));
   // Fallback
   return null;
 }
@@ -101,6 +113,7 @@ const Index = () => {
 
       setResult(parsedResult);
     } catch (err) {
+      console.error("Fetch/Processing error:", err);
       const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
       const statusMatch = errorMessage.match(/status (\d+)/);
       setError({
